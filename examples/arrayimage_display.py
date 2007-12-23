@@ -72,7 +72,6 @@ if __name__ == '__main__':
         w.dispatch_events()
         
         background.blit_tiled(0, 0, 0, w.width, w.height)
-        img = aii.texture
         img.blit(0, 0, 0)
         w.flip()
 
