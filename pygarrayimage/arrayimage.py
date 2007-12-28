@@ -2,14 +2,14 @@
 # pyglet
 # Copyright (c) 2007 Andrew Straw
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions 
+# modification, are permitted provided that the following conditions
 # are met:
 #
 #  * Redistributions of source code must retain the above copyright
 #    notice, this list of conditions and the following disclaimer.
-#  * Redistributions in binary form must reproduce the above copyright 
+#  * Redistributions in binary form must reproduce the above copyright
 #    notice, this list of conditions and the following disclaimer in
 #    the documentation and/or other materials provided with the
 #    distribution.
@@ -42,7 +42,15 @@ def is_c_contiguous(inter):
     if strides is None:
         return True
     else:
-        raise NotImplementedError('XXX')
+        test_strides = strides[-1]
+        N = len(strides)
+        for i in range(N-2):
+            test_strides *= test_strides * shape[N-i-1]
+            if test_strides == strides[N-i-2]:
+                continue
+            else:
+                return False
+        return True
 
 def get_stride0(inter):
     strides = inter.get('strides')
@@ -125,7 +133,7 @@ class ArrayInterfaceImage(ImageData):
         print 'nbytes',nbytes
         return mydata.value
     data = property(get_data,None,"string view of data")
-        
+
     def _convert(self, format, pitch):
         if format == self._current_format and pitch == self._current_pitch:
             # do something with these values to convert to a ctypes.c_void_p
@@ -153,7 +161,7 @@ class ArrayInterfaceImage(ImageData):
         texture = self.texture
         internalformat = None
         self.blit_to_texture( texture.target, texture.level, 0, 0, 0, internalformat )
-        
+
     def view_new_array(self,arr):
         '''View a new array of the same shape.
 
