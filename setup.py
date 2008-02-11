@@ -11,7 +11,7 @@ In other words, this allows fast transfer of data from numpy arrays
 (or any other data source supporting the array interface) to the video
 card.
 """,
-      version='0.0.2', # keep in sync with arrayimage.py
+      version='0.0.3', # keep in sync with arrayimage.py
       install_requires=['pyglet>=1.0',],
       author='Andrew Straw',
       author_email='strawman@astraw.com',
