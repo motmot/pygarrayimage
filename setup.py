@@ -12,7 +12,7 @@ In other words, this allows fast transfer of data from numpy arrays
 card.
 """,
       version='0.0.2', # keep in sync with arrayimage.py
-      #install_requires=['pyglet>=1.0',], # pyglet egg is broken
+      install_requires=['pyglet>=1.0',],
       author='Andrew Straw',
       author_email='strawman@astraw.com',
       url='http://code.astraw.com/projects/motmot/wiki/pygarrayimage',
