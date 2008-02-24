@@ -40,6 +40,7 @@ __all__ = ['ArrayInterfaceImage']
 
 def is_c_contiguous(inter):
     strides = inter.get('strides')
+    shape = inter.get('shape')
     if strides is None:
         return True
     else:
@@ -181,7 +182,12 @@ class ArrayInterfaceImage(ImageData):
 
         if not is_c_contiguous(inter):
             if self.allow_copy:
-                raise NotImplementedError('')
+                # Currently require numpy to deal with this
+                # case. POSSIBLY TODO: re-implement copying into
+                # string buffer so that numpy is not required.
+                import numpy
+                arr = numpy.array( arr, copy=True )
+                inter = arr.__array_interface__
             else:
                 raise ValueError('copying is not allowed but data is not C contiguous')
 
