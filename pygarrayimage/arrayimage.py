@@ -35,7 +35,7 @@
 from pyglet.image import ImageData
 import ctypes
 
-__version__ = '0.0.3' # keep in sync with setup.py
+__version__ = '0.0.4' # keep in sync with setup.py
 __all__ = ['ArrayInterfaceImage']
 
 def is_c_contiguous(inter):
