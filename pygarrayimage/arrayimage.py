@@ -186,7 +186,7 @@ class ArrayInterfaceImage(ImageData):
                 # case. POSSIBLY TODO: re-implement copying into
                 # string buffer so that numpy is not required.
                 import numpy
-                arr = numpy.array( arr, copy=True )
+                arr = numpy.array( arr, copy=True, order='C' )
                 inter = arr.__array_interface__
             else:
                 raise ValueError('copying is not allowed but data is not C contiguous')
