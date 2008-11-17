@@ -1,6 +1,6 @@
 # ----------------------------------------------------------------------------
 # pyglet
-# Copyright (c) 2007 Andrew Straw
+# Copyright (c) 2007-2008 Andrew Straw
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@
 from pyglet.image import ImageData
 import ctypes
 
-__version__ = '0.0.6' # keep in sync with setup.py
+__version__ = '0.0.6-svn' # keep in sync with setup.py
 __all__ = ['ArrayInterfaceImage']
 
 def is_c_contiguous(inter):
@@ -108,12 +108,14 @@ class ArrayInterfaceImage(ImageData):
                 elif depth==1:
                     format = 'L'
                 else:
-                    raise ValueError("could not determine a format for depth %d"%depth)
+                    raise ValueError("could not determine a format for "
+                                     "depth %d"%depth)
         else:
             raise ValueError("arr must have 2 or 3 dimensions")
         data = None
         pitch = get_stride0(self.inter)
-        super(ArrayInterfaceImage, self).__init__(width, height, format, data, pitch=pitch)
+        super(ArrayInterfaceImage, self).__init__(
+            width, height, format, data, pitch=pitch)
 
         self.view_new_array( arr )
 
@@ -122,18 +124,18 @@ class ArrayInterfaceImage(ImageData):
             return self._real_string_data
 
         if not self.allow_copy:
-            raise ValueError("cannot get a view of the data without allowing copy")
+            raise ValueError("cannot get a view of the data without "
+                             "allowing copy")
 
         # create a copy of the data in a Python str
         shape = self.inter['shape']
-        print 'shape',shape
         nbytes = 1
         for i in range(len(shape)):
             nbytes *= shape[i]
         mydata = ctypes.create_string_buffer( nbytes )
         ctypes.memmove( mydata, self.data_ptr, nbytes)
-        print 'nbytes',nbytes
         return mydata.value
+
     data = property(get_data,None,"string view of data")
 
     def _convert(self, format, pitch):
@@ -148,7 +150,8 @@ class ArrayInterfaceImage(ImageData):
             if self.allow_copy:
                 raise NotImplementedError("XXX")
             else:
-                raise ValueError("cannot convert to desired format/pitch without copying")
+                raise ValueError("cannot convert to desired "
+                                 "format/pitch without copying")
 
     def _ensure_string_data(self):
         if self.allow_copy:
@@ -162,7 +165,8 @@ class ArrayInterfaceImage(ImageData):
 
         texture = self.texture
         internalformat = None
-        self.blit_to_texture( texture.target, texture.level, 0, 0, 0, internalformat )
+        self.blit_to_texture(
+            texture.target, texture.level, 0, 0, 0, internalformat )
 
     def view_new_array(self,arr):
         '''View a new array of the same shape.
@@ -189,7 +193,8 @@ class ArrayInterfaceImage(ImageData):
                 arr = numpy.array( arr, copy=True, order='C' )
                 inter = arr.__array_interface__
             else:
-                raise ValueError('copying is not allowed but data is not C contiguous')
+                raise ValueError('copying is not allowed but data is not '
+                                 'C contiguous')
 
         if inter['typestr'] != '|u1':
             raise ValueError("data is not type uint8 (typestr=='|u1')")
@@ -207,7 +212,8 @@ class ArrayInterfaceImage(ImageData):
         elif isinstance(idata,str):
             self._real_string_data = idata
         else:
-            raise ValueError("__array_interface__ data attribute was not tuple or string")
+            raise ValueError("__array_interface__ data attribute was not "
+                             "tuple or string")
 
         # maintain references so they're not de-allocated
         self.inter = inter
