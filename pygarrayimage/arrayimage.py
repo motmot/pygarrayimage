@@ -234,7 +234,7 @@ class ArrayImage(ArrayInterfaceImage):
     """
 
     def create_texture(self, cls):
-        '''Create a texture containing this image.
+        """Create a texture containing this image.
 
         If the image's dimensions are not powers of 2, a TextureRegion of
         a larger Texture will be returned that matches the dimensions of this
@@ -245,7 +245,7 @@ class ArrayImage(ArrayInterfaceImage):
                 Class to construct.
 
         :rtype: cls or cls.region_class
-        '''
+        """
 
         texture = cls.create_for_size(
             gl.GL_TEXTURE_2D, self.width, self.height)
