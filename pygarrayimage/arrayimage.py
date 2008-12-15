@@ -2,6 +2,7 @@
 # pyglet
 # Copyright (c) 2007-2008 Andrew Straw
 # Copyright (c) 2005-2008, Enthought, Inc.
+# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,6 +36,8 @@
 
 from pyglet.image import ImageData
 import ctypes
+import pyglet
+import pyglet.gl as gl
 
 __version__ = '0.0.6-svn' # keep in sync with setup.py
 __all__ = ['ArrayInterfaceImage']
@@ -223,17 +226,18 @@ class ArrayInterfaceImage(ImageData):
         self.dirty()
 
 # Port of Enthought's ArrayImage, found at
-# https://svn.enthought.com/enthought/changeset/18241
-
+# https://svn.enthought.com/enthought/changeset/18241 Robert Kern's
+# log message says "Correct some edge artifacts when drawing images."
 
 class ArrayImage(ArrayInterfaceImage):
     """ pyglet ImageData made from numpy arrays.
 
-    Customized from pygarrayimage's ArrayInterfaceImage to override the texture
-    creation.
+    Customized from pygarrayimage's ArrayInterfaceImage to override
+    the texture creation. blit_to_texture seems to be modified from
+    pyglet's ImageData class.
     """
 
-    def create_texture(self, cls):
+    def create_texture(self, cls, rectangle=False):
         """Create a texture containing this image.
 
         If the image's dimensions are not powers of 2, a TextureRegion of
@@ -243,18 +247,20 @@ class ArrayImage(ArrayInterfaceImage):
         :Parameters:
             `cls` : class (subclass of Texture)
                 Class to construct.
+            `rectangle` : bool
+                ``True`` if a rectangle can be created; see
+                `AbstractImage.get_texture`.
+
+                **Since:** pyglet 1.1
 
         :rtype: cls or cls.region_class
         """
-
-        texture = cls.create_for_size(
-            gl.GL_TEXTURE_2D, self.width, self.height)
+        internalformat = self._get_internalformat(self.format)
+        texture = cls.create(self.width, self.height, internalformat, rectangle)
         subimage = False
         if texture.width != self.width or texture.height != self.height:
             texture = texture.get_region(0, 0, self.width, self.height)
             subimage = True
-
-        internalformat = self._get_internalformat(self.format)
 
         gl.glBindTexture(texture.target, texture.id)
         gl.glTexParameteri(texture.target, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE)
@@ -326,8 +332,14 @@ class ArrayImage(ArrayInterfaceImage):
                 format, type = self._get_gl_format_and_type(data_format)
 
         # Workaround: don't use GL_UNPACK_ROW_LENGTH
-        if gl._current_context._workaround_unpack_row_length:
-            data_pitch = self.width * len(data_format)
+        if pyglet.version[:3] >= '1.1':
+            # tested on 1.1beta1
+            if gl.current_context._workaround_unpack_row_length:
+                data_pitch = self.width * len(data_format)
+        else:
+            # tested on 1.0
+            if gl._current_context._workaround_unpack_row_length:
+                data_pitch = self.width * len(data_format)
 
         # Get data in required format (hopefully will be the same format it's
         # already in, unless that's an obscure format, upside-down or the
