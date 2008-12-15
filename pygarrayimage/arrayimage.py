@@ -271,13 +271,13 @@ class ArrayImage(ArrayInterfaceImage):
                          width, height,
                          1,
                          gl.GL_RGBA, gl.GL_UNSIGNED_BYTE,
-                         blank) 
+                         blank)
             internalformat = None
 
-        self.blit_to_texture(texture.target, texture.level, 
+        self.blit_to_texture(texture.target, texture.level,
             0, 0, 0, internalformat)
-        
-        return texture 
+
+        return texture
 
     def blit_to_texture(self, target, level, x, y, z, internalformat=None):
         '''Draw this image to to the currently bound texture at `target`.
@@ -293,7 +293,7 @@ class ArrayImage(ArrayInterfaceImage):
         matrix = None
         format, type = self._get_gl_format_and_type(data_format)
         if format is None:
-            if (len(data_format) in (3, 4) and 
+            if (len(data_format) in (3, 4) and
                 gl.gl_info.have_extension('GL_ARB_imaging')):
                 # Construct a color matrix to convert to GL_RGBA
                 def component_column(component):
@@ -306,7 +306,7 @@ class ArrayImage(ArrayInterfaceImage):
                 lookup_format = data_format + 'XXX'
                 matrix = (component_column(lookup_format[0]) +
                           component_column(lookup_format[1]) +
-                          component_column(lookup_format[2]) + 
+                          component_column(lookup_format[2]) +
                           component_column(lookup_format[3]))
                 format = {
                     3: gl.GL_RGB,
@@ -349,7 +349,7 @@ class ArrayImage(ArrayInterfaceImage):
         gl.glTexParameteri(target, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE)
         gl.glTexParameteri(target, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR)
         gl.glTexParameteri(target, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR)
-        
+
 
         if target == gl.GL_TEXTURE_3D:
             assert not internalformat
@@ -376,4 +376,4 @@ class ArrayImage(ArrayInterfaceImage):
         if matrix:
             gl.glPopMatrix()
             gl.glMatrixMode(gl.GL_MODELVIEW)
-    
+
