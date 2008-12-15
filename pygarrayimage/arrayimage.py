@@ -70,7 +70,7 @@ def get_stride0(inter):
             cumproduct *= shape[i]
         return cumproduct
 
-class ArrayInterfaceImage(ImageData):
+class ArrayInterfaceImage_NoHack(ImageData):
     def __init__(self,arr,format=None,allow_copy=True):
         '''Initialize image data from the numpy array interface
 
@@ -118,7 +118,7 @@ class ArrayInterfaceImage(ImageData):
             raise ValueError("arr must have 2 or 3 dimensions")
         data = None
         pitch = get_stride0(self.inter)
-        super(ArrayInterfaceImage, self).__init__(
+        super(ArrayInterfaceImage_NoHack, self).__init__(
             width, height, format, data, pitch=pitch)
 
         self.view_new_array( arr )
@@ -229,12 +229,12 @@ class ArrayInterfaceImage(ImageData):
 # https://svn.enthought.com/enthought/changeset/18241 Robert Kern's
 # log message says "Correct some edge artifacts when drawing images."
 
-class ArrayImage(ArrayInterfaceImage):
+class ArrayInterfaceImage_Workaround(ArrayInterfaceImage_NoHack):
     """ pyglet ImageData made from numpy arrays.
 
-    Customized from pygarrayimage's ArrayInterfaceImage to override
-    the texture creation. blit_to_texture seems to be modified from
-    pyglet's ImageData class.
+    Subclasses ArrayInterfaceImage_NoHack to override texture
+    creation. blit_to_texture is modified from pyglet's ImageData
+    class.
     """
 
     def create_texture(self, cls, rectangle=False):
@@ -389,3 +389,4 @@ class ArrayImage(ArrayInterfaceImage):
             gl.glPopMatrix()
             gl.glMatrixMode(gl.GL_MODELVIEW)
 
+ArrayInterfaceImage = ArrayInterfaceImage_Workaround
