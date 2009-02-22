@@ -1,8 +1,6 @@
 # ----------------------------------------------------------------------------
 # pyglet
 # Copyright (c) 2007-2008 Andrew Straw
-# Copyright (c) 2005-2008, Enthought, Inc.
-# Copyright (c) 2006-2008 Alex Holkner
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -36,8 +34,6 @@
 
 from pyglet.image import ImageData
 import ctypes
-import pyglet
-import pyglet.gl as gl
 
 __version__ = '0.0.6-svn' # keep in sync with setup.py
 __all__ = ['ArrayInterfaceImage']
@@ -70,7 +66,7 @@ def get_stride0(inter):
             cumproduct *= shape[i]
         return cumproduct
 
-class ArrayInterfaceImage_NoHack(ImageData):
+class ArrayInterfaceImage(ImageData):
     def __init__(self,arr,format=None,allow_copy=True):
         '''Initialize image data from the numpy array interface
 
@@ -118,7 +114,7 @@ class ArrayInterfaceImage_NoHack(ImageData):
             raise ValueError("arr must have 2 or 3 dimensions")
         data = None
         pitch = get_stride0(self.inter)
-        super(ArrayInterfaceImage_NoHack, self).__init__(
+        super(ArrayInterfaceImage, self).__init__(
             width, height, format, data, pitch=pitch)
 
         self.view_new_array( arr )
@@ -224,169 +220,3 @@ class ArrayInterfaceImage_NoHack(ImageData):
         self.arr = arr
 
         self.dirty()
-
-# Port of Enthought's ArrayImage, found at
-# https://svn.enthought.com/enthought/changeset/18241 Robert Kern's
-# log message says "Correct some edge artifacts when drawing images."
-
-class ArrayInterfaceImage_Workaround(ArrayInterfaceImage_NoHack):
-    """ pyglet ImageData made from numpy arrays.
-
-    Subclasses ArrayInterfaceImage_NoHack to override texture
-    creation. blit_to_texture is modified from pyglet's ImageData
-    class.
-    """
-
-    def create_texture(self, cls, rectangle=False):
-        """Create a texture containing this image.
-
-        If the image's dimensions are not powers of 2, a TextureRegion of
-        a larger Texture will be returned that matches the dimensions of this
-        image.
-
-        :Parameters:
-            `cls` : class (subclass of Texture)
-                Class to construct.
-            `rectangle` : bool
-                ``True`` if a rectangle can be created; see
-                `AbstractImage.get_texture`.
-
-                **Since:** pyglet 1.1
-
-        :rtype: cls or cls.region_class
-        """
-        internalformat = self._get_internalformat(self.format)
-        texture = cls.create(self.width, self.height, internalformat, rectangle)
-        subimage = False
-        if texture.width != self.width or texture.height != self.height:
-            texture = texture.get_region(0, 0, self.width, self.height)
-            subimage = True
-
-        gl.glBindTexture(texture.target, texture.id)
-        gl.glTexParameteri(texture.target, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE)
-        gl.glTexParameteri(texture.target, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE)
-        gl.glTexParameteri(texture.target, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR)
-        gl.glTexParameteri(texture.target, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR)
-
-        if subimage:
-            width = texture.owner.width
-            height = texture.owner.height
-            blank = (ctypes.c_ubyte * (width * height * 4))()
-            gl.glTexImage2D(texture.target, texture.level,
-                         internalformat,
-                         width, height,
-                         1,
-                         gl.GL_RGBA, gl.GL_UNSIGNED_BYTE,
-                         blank)
-            internalformat = None
-
-        self.blit_to_texture(texture.target, texture.level,
-            0, 0, 0, internalformat)
-
-        return texture
-
-    def blit_to_texture(self, target, level, x, y, z, internalformat=None):
-        '''Draw this image to to the currently bound texture at `target`.
-
-        If `internalformat` is specified, glTexImage is used to initialise
-        the texture; otherwise, glTexSubImage is used to update a region.
-        '''
-
-        data_format = self.format
-        data_pitch = abs(self._current_pitch)
-
-        # Determine pixel format from format string
-        matrix = None
-        format, type = self._get_gl_format_and_type(data_format)
-        if format is None:
-            if (len(data_format) in (3, 4) and
-                gl.gl_info.have_extension('GL_ARB_imaging')):
-                # Construct a color matrix to convert to GL_RGBA
-                def component_column(component):
-                    try:
-                        pos = 'RGBA'.index(component)
-                        return [0] * pos + [1] + [0] * (3 - pos)
-                    except ValueError:
-                        return [0, 0, 0, 0]
-                # pad to avoid index exceptions
-                lookup_format = data_format + 'XXX'
-                matrix = (component_column(lookup_format[0]) +
-                          component_column(lookup_format[1]) +
-                          component_column(lookup_format[2]) +
-                          component_column(lookup_format[3]))
-                format = {
-                    3: gl.GL_RGB,
-                    4: gl.GL_RGBA}.get(len(data_format))
-                type = gl.GL_UNSIGNED_BYTE
-
-                gl.glMatrixMode(gl.GL_COLOR)
-                gl.glPushMatrix()
-                gl.glLoadMatrixf((gl.GLfloat * 16)(*matrix))
-            else:
-                # Need to convert data to a standard form
-                data_format = {
-                    1: 'L',
-                    2: 'LA',
-                    3: 'RGB',
-                    4: 'RGBA'}.get(len(data_format))
-                format, type = self._get_gl_format_and_type(data_format)
-
-        # Workaround: don't use GL_UNPACK_ROW_LENGTH
-        if pyglet.version[:3] >= '1.1':
-            # tested on 1.1beta1
-            if gl.current_context._workaround_unpack_row_length:
-                data_pitch = self.width * len(data_format)
-        else:
-            # tested on 1.0
-            if gl._current_context._workaround_unpack_row_length:
-                data_pitch = self.width * len(data_format)
-
-        # Get data in required format (hopefully will be the same format it's
-        # already in, unless that's an obscure format, upside-down or the
-        # driver is old).
-        data = self._convert(data_format, data_pitch)
-
-        if data_pitch & 0x1:
-            alignment = 1
-        elif data_pitch & 0x2:
-            alignment = 2
-        else:
-            alignment = 4
-        row_length = data_pitch / len(data_format)
-        gl.glPushClientAttrib(gl.GL_CLIENT_PIXEL_STORE_BIT)
-        gl.glPixelStorei(gl.GL_UNPACK_ALIGNMENT, alignment)
-        gl.glPixelStorei(gl.GL_UNPACK_ROW_LENGTH, row_length)
-        self._apply_region_unpack()
-        gl.glTexParameteri(target, gl.GL_TEXTURE_WRAP_S, gl.GL_CLAMP_TO_EDGE)
-        gl.glTexParameteri(target, gl.GL_TEXTURE_WRAP_T, gl.GL_CLAMP_TO_EDGE)
-        gl.glTexParameteri(target, gl.GL_TEXTURE_MAG_FILTER, gl.GL_LINEAR)
-        gl.glTexParameteri(target, gl.GL_TEXTURE_MIN_FILTER, gl.GL_LINEAR)
-
-
-        if target == gl.GL_TEXTURE_3D:
-            assert not internalformat
-            gl.glTexSubImage3D(target, level,
-                            x, y, z,
-                            self.width, self.height, 1,
-                            format, type,
-                            data)
-        elif internalformat:
-            gl.glTexImage2D(target, level,
-                         internalformat,
-                         self.width, self.height,
-                         0,
-                         format, type,
-                         data)
-        else:
-            gl.glTexSubImage2D(target, level,
-                            x, y,
-                            self.width, self.height,
-                            format, type,
-                            data)
-        gl.glPopClientAttrib()
-
-        if matrix:
-            gl.glPopMatrix()
-            gl.glMatrixMode(gl.GL_MODELVIEW)
-
-ArrayInterfaceImage = ArrayInterfaceImage_Workaround
