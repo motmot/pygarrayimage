@@ -13,7 +13,7 @@ Description
 
 pygarrayimage allows display of Python objects supporting the `array
 interface`__ as OpenGL textures without a copy. The OpenGL texture
-handling is done using pyglet__. 
+handling is done using pyglet__.
 
 __ http://numpy.scipy.org/array_interface.shtml
 __ http://pyglet.org pyglet
@@ -28,7 +28,7 @@ Discussion
 For the time being, all discussion for this software should happen on
 the `pyglet-users mailing list`__.
 
-__ http://groups.google.com/group/pyglet-users 
+__ http://groups.google.com/group/pyglet-users
 
 Screenshot
 ==========
@@ -46,9 +46,10 @@ Download official releases from `the download page`__.
 
 __ http://pypi.python.org/pypi/pygarrayimage
 
-The `development (SVN) version of pygarrayimage`__ may be downloaded
-via subversion::
+The `development version of pygarrayimage`__ (`raw files`__) may
+be downloaded via git::
 
-  svn co http://code.astraw.com/motmot/trunk/pygarrayimage
+  git clone git://github.com/motmot/pygarrayimage.git
 
-__ http://code.astraw.com/motmot/trunk/pygarrayimage#egg=pygarrayimage-dev
+__ http://github.com/motmot/pygarrayimage
+__ http://github.com/motmot/pygarrayimage.git#egg=pygarrayimage-dev
