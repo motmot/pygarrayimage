@@ -2,8 +2,6 @@ from setuptools import setup
 import os
 
 kws = {}
-if not int(os.getenv( 'DISABLE_INSTALL_REQUIRES','0' )):
-    kws['install_requires'] = ['pyglet>=1.0']
 
 setup(name='pygarrayimage',
       description="Allow numpy arrays as source of texture data for pyglet.",
