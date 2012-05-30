@@ -18,7 +18,7 @@ TODO: support the buffer interface added with Python 2.6/3.0 rather
 than the numpy-defined array interface.
 
 """,
-      version='0.0.7', # keep in sync with pygarrayimage/arrayimage.py
+      version='1.0', # keep in sync with pygarrayimage/arrayimage.py
       author='Andrew Straw',
       author_email='strawman@astraw.com',
       url='http://code.astraw.com/projects/motmot/wiki/pygarrayimage',
